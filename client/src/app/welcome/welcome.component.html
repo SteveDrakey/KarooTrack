@@ -1,0 +1,12 @@
+<h1>Welcome to Karoo live tracker</h1>
+<h2>The current Tracker does not show where you have been, this does</h2>
+<p>Enter your Karoo Tracker ID below or paste the full URL</p>
+<!-- https://dashboard.hammerhead.io/live/5asKAagf -->
+<mat-form-field #inp class="example-form-field" appearance="fill">
+    <mat-label>Karoo Tracker ID</mat-label>
+    <input  matInput type="text" [(ngModel)]="trackingId" minlength="8" maxlength="8" placeholder="5asKAagf">
+    <button (click)="go()" *ngIf="trackingId" matSuffix mat-icon-button aria-label="Done">
+        <mat-icon>arrow_forward</mat-icon>
+      </button>
+    <mat-error>Tracker ID needs be at least 8 characters</mat-error>
+</mat-form-field>             
