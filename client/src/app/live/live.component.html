@@ -1,5 +1,11 @@
+<div *igIf="liveTracking" id="overlay">
+  <p>{{liveTracking.riderName}}</p>
+  <p>{{liveTracking.state}}</p>
+  <p>{{liveTracking.updatedAt | date}}</p>
+  <p *ngIf="liveTracking.state=='idle'">If idle for to long, map trace is reset</p>
+</div>
+
 <div class="container-fluid py-3">
     <div id="map"></div>
-  </div>
-  <!-- <pre>{{liveTracking.location | json}}</pre>
-  <pre>{{liveTracking.locations | json}}</pre> -->
+</div>
+  

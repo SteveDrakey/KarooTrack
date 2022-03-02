@@ -18,7 +18,6 @@ const timerTrigger: AzureFunction = async function (context: Context, myTimer: a
     const containerClient = blobServiceClient.getContainerClient(containerName);
     let blobs = containerClient.listBlobsFlat();
     for await (const blob of blobs) {
-        console.log(blob);
         const userToken = blob.name;
         const response = await fetch(`https://dashboard.hammerhead.io/v1/shares/tracking/${userToken}`, { method: 'GET' });
         if (response.ok) {
@@ -51,7 +50,16 @@ const timerTrigger: AzureFunction = async function (context: Context, myTimer: a
                     const blockBlobClient = containerClient.getBlockBlobClient(blobName);
                     await blockBlobClient.upload(content, content.length);
                 }
+            } else {
+                var today =  Date.now();
+                var updatedAt = Date.parse(liveData.updatedAt.toString());
+
+                console.log(today , updatedAt);
+                var hours = Math.abs(today- updatedAt )   / 36e5;
+                console.log('idle for', hours);
             }
+        } else {
+            console.log(`Error ${blob.name}`);
         }
     }
 }

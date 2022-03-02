@@ -6,7 +6,12 @@ import { Subscription, timer } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 import * as L from 'leaflet';
+import  'leaflet-rotatedmarker'
+
+import * as polyUtil from 'polyline-encoded';
+
 import { ActivityStatus } from 'src/types';
+import { LatLngExpression } from 'leaflet';
 
 @Component({
   selector: 'app-live',
@@ -16,9 +21,12 @@ import { ActivityStatus } from 'src/types';
 export class LiveComponent implements AfterViewInit, OnDestroy {
   map: any;
   polyline: any;
+  routePolylineLayer: any;
+  routePolyline: any;
+
   trackingId: string;
   subscription: Subscription = new Subscription();
-  currentLocationMarker: L.Marker<any>;
+  currentLocationMarker: L.Marker;
   mapLoaded = false;
   defaultIcon: L.Icon<L.IconOptions>;
 
@@ -32,11 +40,16 @@ export class LiveComponent implements AfterViewInit, OnDestroy {
 
   constructor(public route: ActivatedRoute, private router: Router, private http: HttpClient, private _snackBar: MatSnackBar) {
 
-    this.defaultIcon = L.icon({ iconUrl: "https://unpkg.com/leaflet@1.0.3/dist/images/marker-icon.png" });
+    this.defaultIcon = new L.Icon({
+      iconUrl: 'assets/outline_location_on_black_24dp.png',
+      iconSize: [48, 48], // size of the icon
+      iconAnchor: [24, 24], // point of the icon which will correspond to marker's location
+      popupAnchor: [0, -51] // point from which the popup should open relative to the iconAnchor                                 
+  });
 
-    const source = timer(5000, 5000);
+    const reloadTimer = timer(5000, 5000);
 
-    this.subscription.add(source.subscribe(async val => {
+    this.subscription.add(reloadTimer.subscribe(async val => {
       try {
         this.liveTracking = await http.get<ActivityStatus>(`https://storagekarootrack.blob.core.windows.net/tracking/${this.trackingId}`).toPromise();
         this.updateTracking();
@@ -53,6 +66,7 @@ export class LiveComponent implements AfterViewInit, OnDestroy {
 
       }, async error => {
         try {
+          await this._snackBar.open('No ride tracking history found creating');
           var karooTracking = await http.get<ActivityStatus>(`/api/Register?token=${this.trackingId}`).toPromise();
           await this._snackBar.open(`Welcome ${karooTracking.riderName}`);
         }
@@ -78,22 +92,37 @@ export class LiveComponent implements AfterViewInit, OnDestroy {
       accessToken: environment.mapbox.accessToken,
     }).addTo(this.map);
   }
-
   private updateTracking() {
 
     if (!this.liveTracking) return;
+    
+    if (this.liveTracking.route) {
+
+      if (this.routePolyline != this.liveTracking.route.routePolyline) {
+        if (this.routePolyline) this.map.removeLayer(this.routePolyline);
+        this.routePolyline = null;
+      }
+
+      if (!this.routePolylineLayer) {
+        this.routePolyline = this.liveTracking.route.routePolyline;
+        var latlngs = polyUtil.decode(this.liveTracking.route.routePolyline);
+        this.routePolylineLayer = L.polyline(latlngs, { color: "orange", fillOpacity: 50, weight:8 }).addTo(this.map);
+      }
+    }
 
     if (!this.currentLocationMarker) {
       if (this.liveTracking.locations && this.liveTracking.locations.length > 0) {
-        L.marker(this.liveTracking.locations[0], { icon: this.defaultIcon, title: "Start" }).addTo(this.map);
+        L.circleMarker(this.liveTracking.locations[0],{ radius: 15}).addTo(this.map);
       } else {
-        L.marker(this.liveTracking.location, { icon: this.defaultIcon, title: "Start" }).addTo(this.map);
+        L.circleMarker(this.liveTracking.location,{ radius: 15}).addTo(this.map);
       }
-
-      this.currentLocationMarker = L.marker(this.liveTracking.location, { icon: this.defaultIcon, title: "Current" }).addTo(this.map);
+      // first time, we centre 
       this.map.setView([this.liveTracking.location.lat, this.liveTracking.location.lng], 16, false);
+      this.currentLocationMarker = L.marker(this.liveTracking.location,{ rotationAngle: this.liveTracking.bearing, icon: this.defaultIcon}).addTo(this.map);
     }
+
     this.currentLocationMarker.setLatLng(this.liveTracking.location);
+    this.currentLocationMarker.setRotationAngle(this.liveTracking.bearing);
 
     if (this.liveTracking?.locations?.length > 0) {
       if (this.polyline) {
@@ -107,3 +136,4 @@ export class LiveComponent implements AfterViewInit, OnDestroy {
     }
   }
 }
+
