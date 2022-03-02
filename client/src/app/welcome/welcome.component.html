@@ -1,6 +1,6 @@
 <h1>Welcome to Karoo live tracker</h1>
-<h2>The current Tracker does not show where you have been, this does</h2>
-<p>Enter your Karoo Tracker ID below or paste the full URL</p>
+<h2>hammerhead live tracking just shows your current location not where you have been</h2>
+<p>Enter your Karoo Tracker ID below</p>
 <!-- https://dashboard.hammerhead.io/live/5asKAagf -->
 <mat-form-field #inp class="example-form-field" appearance="fill">
     <mat-label>Karoo Tracker ID</mat-label>
@@ -9,4 +9,7 @@
         <mat-icon>arrow_forward</mat-icon>
       </button>
     <mat-error>Tracker ID needs be at least 8 characters</mat-error>
+    
 </mat-form-field>             
+
+<button  mat-button (click)="go()">Go</button>
