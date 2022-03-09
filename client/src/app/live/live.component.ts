@@ -30,6 +30,10 @@ export class LiveComponent implements AfterViewInit, OnDestroy {
   mapLoaded = false;
   defaultIcon: L.Icon<L.IconOptions>;
 
+  lookup(key :string) {
+    return this.liveTracking.activityInfo.find( f=>f.key==='TYPE_DISTANCE_ID').value.value;
+  }
+
   public ngAfterViewInit(): void {
     console.log('load map', this.mapLoaded);
     if (!this.mapLoaded) this.loadMap();
@@ -131,7 +135,7 @@ export class LiveComponent implements AfterViewInit, OnDestroy {
           this.liveTracking.locations.slice(currentLatLngs.length).forEach((f) => this.polyline.addLatLng([f.lat, f.lng]));
         }
       } else {
-        this.polyline = L.polyline(this.liveTracking.locations).addTo(this.map);
+        this.polyline = L.polyline(this.liveTracking.locations,{color:"gray", weight:6}).addTo(this.map);
       }
     }
   }

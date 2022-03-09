@@ -1,9 +1,15 @@
-<div *igIf="liveTracking" id="overlay">
-  <p>{{liveTracking.riderName}}</p>
-  <p>{{liveTracking.state}}</p>
-  <p>{{liveTracking.updatedAt | date}}</p>
-  <p *ngIf="liveTracking.state=='idle'">If idle for to long, map trace is reset</p>
-</div>
+<mat-card *ngIf="liveTracking" id="overlay">
+  <mat-card-title>
+  {{liveTracking.riderName}}
+  </mat-card-title>
+  <mat-card-subtitle>
+  {{liveTracking.state}}
+  </mat-card-subtitle>
+  <mat-card-content>
+  Updated {{liveTracking.updatedAt | amTimeAgo}} <br>
+  Distance {{ (lookup('TYPE_DISTANCE_ID') * 0.000621371) | number}} miles <br>  
+</mat-card-content>
+</mat-card>
 
 <div class="container-fluid py-3">
     <div id="map"></div>

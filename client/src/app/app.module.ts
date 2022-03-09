@@ -12,6 +12,8 @@ import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import {MatIconModule} from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MomentModule } from 'ngx-moment';
+import {MatCardModule} from '@angular/material/card';
 
 @NgModule({
   declarations: [
@@ -22,6 +24,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
   imports: [
     FormsModule,
     MatFormFieldModule,
+    MatCardModule,
     MatInputModule,
     MatButtonModule,
     BrowserModule,
@@ -29,6 +32,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
     BrowserAnimationsModule,
     MatSnackBarModule,
     MatIconModule,
+    MomentModule,
     HttpClientModule
 
   ],
