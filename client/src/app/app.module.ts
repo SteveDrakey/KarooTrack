@@ -14,6 +14,9 @@ import {MatIconModule} from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MomentModule } from 'ngx-moment';
 import {MatCardModule} from '@angular/material/card';
+import {MatDividerModule} from '@angular/material/divider'
+import {MatChipsModule} from '@angular/material/chips';
+import {MatListModule} from '@angular/material/list';
 
 @NgModule({
   declarations: [
@@ -32,8 +35,11 @@ import {MatCardModule} from '@angular/material/card';
     BrowserAnimationsModule,
     MatSnackBarModule,
     MatIconModule,
+    MatDividerModule,
     MomentModule,
-    HttpClientModule
+    HttpClientModule,
+    MatChipsModule,
+    MatListModule,
 
   ],
   providers: [

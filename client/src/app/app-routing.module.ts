@@ -9,8 +9,14 @@ const routes: Routes = [
     component: LiveComponent  
   },
   {
-    path: '',
-    component: WelcomeComponent
+    // we have an issue with the map layer not reloading, 
+    path: 'live',
+    component: LiveComponent  ,
+    redirectTo: 'live/none'
+  },
+  {
+    path: '**',
+    redirectTo: 'live/none'
   }
 ];
 

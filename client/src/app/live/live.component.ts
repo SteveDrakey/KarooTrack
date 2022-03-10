@@ -6,7 +6,7 @@ import { Subscription, timer } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 import * as L from 'leaflet';
-import  'leaflet-rotatedmarker'
+import 'leaflet-rotatedmarker'
 
 import * as polyUtil from 'polyline-encoded';
 
@@ -25,13 +25,15 @@ export class LiveComponent implements AfterViewInit, OnDestroy {
   routePolyline: any;
 
   trackingId: string;
+  newTrackingId: string;
+
   subscription: Subscription = new Subscription();
   currentLocationMarker: L.Marker;
   mapLoaded = false;
   defaultIcon: L.Icon<L.IconOptions>;
 
-  lookup(key :string) {
-    return this.liveTracking.activityInfo.find( f=>f.key==='TYPE_DISTANCE_ID').value.value;
+  lookup(key: string) {
+    return this.liveTracking?.activityInfo?.find(f => f.key === 'TYPE_DISTANCE_ID')?.value?.value;
   }
 
   public ngAfterViewInit(): void {
@@ -49,42 +51,53 @@ export class LiveComponent implements AfterViewInit, OnDestroy {
       iconSize: [48, 48], // size of the icon
       iconAnchor: [24, 24], // point of the icon which will correspond to marker's location
       popupAnchor: [0, -51] // point from which the popup should open relative to the iconAnchor                                 
-  });
+    });
 
     const reloadTimer = timer(5000, 5000);
 
     this.subscription.add(reloadTimer.subscribe(async val => {
+      if (!this.trackingId) return;
+
       try {
-        this.liveTracking = await http.get<ActivityStatus>(`https://storagekarootrack.blob.core.windows.net/tracking/${this.trackingId}`).toPromise();
+        this.liveTracking = await http.get<ActivityStatus>(`https://storagekarootrack.blob.core.windows.net/tracking/${this.trackingId}?${new Date().getTime()}`).toPromise();
         this.updateTracking();
       } catch {
         console.log('Error during timer, maybe tracking os not setup?');
       }
+
     }));
 
     this.route.params.subscribe(async params => {
+      if (!params.trackingId) return;
+      if (params.trackingId === 'none') return;
       this.trackingId = params.trackingId;
-      http.get<ActivityStatus>(`https://storagekarootrack.blob.core.windows.net/tracking/${this.trackingId}`).subscribe(async liveTracking => {
-        this.liveTracking = liveTracking;
-        this.updateTracking();
-
-      }, async error => {
-        try {
-          await this._snackBar.open('No ride tracking history found creating');
-          var karooTracking = await http.get<ActivityStatus>(`/api/Register?token=${this.trackingId}`).toPromise();
-          await this._snackBar.open(`Welcome ${karooTracking.riderName}`);
-        }
-        catch {
-          await this._snackBar.open('Could not create user, did you enter the correct live tracking ID?');
-        }
-      });
+      
+      console.log('sub',params.trackingId);
+      if (this.trackingId) {
+        http.get<ActivityStatus>(`https://storagekarootrack.blob.core.windows.net/tracking/${this.trackingId}?${new Date().getTime()}`).subscribe(async liveTracking => {
+          this.liveTracking = liveTracking;
+          this.updateTracking();
+        }, async error => {
+          try {
+            await this._snackBar.open('No ride tracking history found creating');
+            var karooTracking = await http.get<ActivityStatus>(`/api/Register?token=${this.trackingId}`).toPromise();
+            await this._snackBar.open(`Welcome ${karooTracking.riderName}`);
+          }
+          catch {
+            this.trackingId = null;
+            await this._snackBar.open('Could not create user, did you enter the correct live tracking ID?');
+          }
+        });
+      }
     });
   }
   ngOnDestroy(): void {
-    this.map.remove();
+    console.log('map remove');
+    //this.map.remove();
   }
 
   private loadMap(): void {
+    
     this.map = L.map('map').setView([0, 0], 1);
     console.log('map', this.map);
     L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
@@ -97,9 +110,10 @@ export class LiveComponent implements AfterViewInit, OnDestroy {
     }).addTo(this.map);
   }
   private updateTracking() {
-
+    if (!this.trackingId) return;
     if (!this.liveTracking) return;
-    
+
+
     if (this.liveTracking.route) {
 
       if (this.routePolyline != this.liveTracking.route.routePolyline) {
@@ -110,19 +124,19 @@ export class LiveComponent implements AfterViewInit, OnDestroy {
       if (!this.routePolylineLayer) {
         this.routePolyline = this.liveTracking.route.routePolyline;
         var latlngs = polyUtil.decode(this.liveTracking.route.routePolyline);
-        this.routePolylineLayer = L.polyline(latlngs, { color: "orange", fillOpacity: 50, weight:8 }).addTo(this.map);
+        this.routePolylineLayer = L.polyline(latlngs, { color: "orange", fillOpacity: 50, weight: 8 }).addTo(this.map);
       }
     }
 
     if (!this.currentLocationMarker) {
       if (this.liveTracking.locations && this.liveTracking.locations.length > 0) {
-        L.circleMarker(this.liveTracking.locations[0],{ radius: 15}).addTo(this.map);
+        L.circleMarker(this.liveTracking.locations[0], { radius: 15 }).addTo(this.map);
       } else {
-        L.circleMarker(this.liveTracking.location,{ radius: 15}).addTo(this.map);
+        L.circleMarker(this.liveTracking.location, { radius: 15 }).addTo(this.map);
       }
       // first time, we centre 
       this.map.setView([this.liveTracking.location.lat, this.liveTracking.location.lng], 16, false);
-      this.currentLocationMarker = L.marker(this.liveTracking.location,{ rotationAngle: this.liveTracking.bearing, icon: this.defaultIcon}).addTo(this.map);
+      this.currentLocationMarker = L.marker(this.liveTracking.location, { rotationAngle: this.liveTracking.bearing, icon: this.defaultIcon }).addTo(this.map);
     }
 
     this.currentLocationMarker.setLatLng(this.liveTracking.location);
@@ -135,9 +149,41 @@ export class LiveComponent implements AfterViewInit, OnDestroy {
           this.liveTracking.locations.slice(currentLatLngs.length).forEach((f) => this.polyline.addLatLng([f.lat, f.lng]));
         }
       } else {
-        this.polyline = L.polyline(this.liveTracking.locations,{color:"gray", weight:6}).addTo(this.map);
+        this.polyline = L.polyline(this.liveTracking.locations, { color: "gray", weight: 6 }).addTo(this.map);
       }
     }
   }
+
+  async setupTracking() {
+    const trackingId = this.newTrackingId.split('/').pop();
+    if (trackingId.length != 8) {
+      await this._snackBar.open('Tracking ID is 8 charators');
+      return;
+    }
+    // do we have a user?
+    try {
+      const trackingUser = await this.http.get(`https://storagekarootrack.blob.core.windows.net/tracking/${trackingId}`).toPromise();
+      if (trackingUser) {
+        console.log('live',trackingId);
+        this.router.navigate(['live', trackingId]);
+      }
+    }
+    catch {
+      console.log('user not found');
+      // lets try to create
+      try {
+        console.log('creating users');
+        var karooTracking: any = await this.http.get(`/api/Register?token=${trackingId}`).toPromise();
+        await this._snackBar.open(`Welcome ${karooTracking.riderName}`);
+        console.log('created user');
+        this.router.navigate(['live', trackingId]);
+      }
+      catch {
+        await this._snackBar.open('Could not create user, did you enter the correct live tracking ID?');
+      }
+
+    }
+  }
+
 }
 

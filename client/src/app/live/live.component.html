@@ -1,4 +1,4 @@
-<mat-card *ngIf="liveTracking" id="overlay">
+<mat-card *ngIf="trackingId && liveTracking" id="overlay">
   <mat-card-title>
   {{liveTracking.riderName}}
   </mat-card-title>
@@ -6,12 +6,47 @@
   {{liveTracking.state}}
   </mat-card-subtitle>
   <mat-card-content>
-  Updated {{liveTracking.updatedAt | amTimeAgo}} <br>
-  Distance {{ (lookup('TYPE_DISTANCE_ID') * 0.000621371) | number}} miles <br>  
-</mat-card-content>
-</mat-card>
+    <!-- <mat-list dense>
+      <mat-list-item>Distance {{ (lookup('TYPE_DISTANCE_ID') * 0.000621371) | number}} miles </mat-list-item>
+      <mat-list-item>Updated {{liveTracking.updatedAt | amTimeAgo}} </mat-list-item>
+    </mat-list> -->
 
-<div class="container-fluid py-3">
-    <div id="map"></div>
+    <p>Distance {{ (lookup('TYPE_DISTANCE_ID') * 0.000621371) | number}} miles </p>
+    <p>Updated {{liveTracking.updatedAt | amTimeAgo}} </p>
+
+
+  </mat-card-content>
+  
+  <mat-card-footer>
+    
+  </mat-card-footer>
+</mat-card>
+<div *ngIf="!trackingId" id="overlay">
+  <mat-card>
+    <mat-card-title>
+      Hammerhead live Tracking
+    </mat-card-title>
+    <mat-card-subtitle>
+      Please enter your tracking id below
+    </mat-card-subtitle>
+    <mat-card-content>
+      <mat-form-field #inp class="example-form-field" appearance="fill">
+        <mat-label>Karoo Tracker ID</mat-label>
+        <input  matInput type="text" [(ngModel)]="newTrackingId" minlength="8" maxlength="8" placeholder="5asKAagf">
+        <button (click)="setupTracking()" *ngIf="newTrackingId" matSuffix mat-icon-button aria-label="Done">
+            <mat-icon>arrow_forward</mat-icon>
+          </button>
+        <mat-error>Tracker ID needs be at least 8 characters</mat-error>
+    </mat-form-field>             
+    <mat-card-actions>
+      <button (click)="setupTracking()"  matSuffix mat-icon-button aria-label="Done">Go
+      </button>
+    </mat-card-actions>
+
+    </mat-card-content>
+  </mat-card>
+</div >
+<div  class="container-fluid py-3">
+    <div [id]="'map'"></div>
 </div>
   
